@@ -127,6 +127,7 @@
   showToast() {
     toast.success('Login Succesfull', {
       autoClose: 3000,
+      
     });
   },
   
