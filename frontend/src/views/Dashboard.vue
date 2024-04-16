@@ -122,7 +122,8 @@
           <div class="grid gap-1">
             <h1  class="text-3xl font-bold tracking-tight">{{ word }}</h1>
 
-            <h1 v-if="word==null" class="text-3xl font-bold tracking-tight">Serendipity</h1>
+            <h1 v-if="word == null" class="text-3xl font-bold tracking-tight">Serendipity</h1>
+
 
             <p class="text-gray-500 dark:text-gray-400">/ˌserənˈdipədē/</p>
           </div>
@@ -133,7 +134,7 @@
         <div class="grid gap-4">
           <div class="grid md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-    <h3 class="font-semibold">Pronunciation <audio controls :src="audioSource"></audio></h3>
+    <h3 class="font-semibold">Pronunciation <audio controls :src="audioUrl"></audio></h3>
   </div>
             <div class="flex flex-col gap-2">
               <h3 class="font-semibold">Source</h3>
@@ -194,7 +195,8 @@ export default {
       searchTerm: '',
       wordData: null,
       apiUrl: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
-      word:"",
+      word:null,
+      audioUrl:null
     };
   },
   methods: {
@@ -203,17 +205,28 @@ export default {
     },
     async searchWord() {
   try {
-    // Make the API request with the user's input term
     const response = await fetch(`${this.apiUrl}${this.searchTerm}`);
     const data = await response.json();
-    // Update the wordData property with the fetched data
-    this.wordData = data[0];
-    this.word = this.wordData.word; // Corrected assignment
-    console.log(this.word); // Use this.word instead of word
+    if (Array.isArray(data) && data.length > 0) {
+      this.wordData = data[0];
+      this.word = this.wordData.word;
+
+      // Check if phonetics data exists
+      if (this.wordData.phonetics && this.wordData.phonetics.length > 1) {
+        // Access the audio URL for the second pronunciation variation
+        this.audioUrl = this.wordData.phonetics[1].audio;
+      } else {
+        console.error('Second pronunciation variation not found');
+      }
+    } else {
+      console.error('No data or invalid response from the API');
+    }
   } catch (error) {
     console.error('Error fetching word data:', error);
   }
 }
+
+
 
 
   }
