@@ -156,9 +156,10 @@
             <h3 class="font-semibold">Meanings</h3>
             <div class="grid gap-4 md:gap-8">
               <div class="grid gap-2">
-                <h4 class="font-semibold">Noun</h4>
+                <h4 class="font-semibold">Noun & Meaning</h4>
                 <ul class="pl-4 list-disc gap-2">
-                  <li>The occurrence and development of events by chance in a happy or beneficial way.</li>
+                  <li v-if="meaning == null">The occurrence and development of events by chance in a happy or beneficial way.</li>
+                  <li v-if="meaning">{{ meaning }}</li>
                 </ul>
               </div>
               <div class="grid gap-2">
@@ -196,7 +197,8 @@ export default {
       wordData: null,
       apiUrl: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
       word:null,
-      audioUrl:null
+      audioUrl:null,
+      meaning:null,
     };
   },
   methods: {
@@ -211,12 +213,21 @@ export default {
       this.wordData = data[0];
       this.word = this.wordData.word;
 
-      // Check if phonetics data exists
-      if (this.wordData.phonetics && this.wordData.phonetics.length > 1) {
-        // Access the audio URL for the second pronunciation variation
-        this.audioUrl = this.wordData.phonetics[1].audio;
+      // Check if meanings data exists
+      if (this.wordData.meanings && this.wordData.meanings.length > 0) {
+        // Access the first meaning's definition
+        this.meaning = this.wordData.meanings[0].definitions[0].definition;
+        console.log(this.meaning);
       } else {
-        console.error('Second pronunciation variation not found');
+        console.error('Meanings data not found');
+      }
+
+      // Check if phonetics data exists
+      if (this.wordData.phonetics && this.wordData.phonetics.length > 0) {
+        // Access the audio URL for the first pronunciation variation
+        this.audioUrl = this.wordData.phonetics[0].audio;
+      } else {
+        console.error('Phonetics data not found');
       }
     } else {
       console.error('No data or invalid response from the API');
@@ -225,6 +236,7 @@ export default {
     console.error('Error fetching word data:', error);
   }
 }
+
 
 
 
