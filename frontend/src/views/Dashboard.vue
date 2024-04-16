@@ -89,12 +89,13 @@
         </svg>
         <span>Search A Word</span>
       </a>
-      <form class="flex flex-1 items-center gap-2">
+      <form class="flex flex-1 items-center gap-2" @submit.prevent="searchWord">
         <input
           class="flex h-10 w-96 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 max-w-md flex-1"
           type="search"
           placeholder="Search for a word"
           id="search"
+          v-model="searchTerm"
         />
         <button
           class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-primary/90 h-10 px-4 py-2 shrink-0"
@@ -119,7 +120,11 @@
       <div class="grid gap-4 md:gap-8">
         <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8">
           <div class="grid gap-1">
-            <h1 class="text-3xl font-bold tracking-tight">Serendipity</h1>
+            <h1  class="text-3xl font-bold tracking-tight">{{ word }}</h1>
+
+            <h1 v-if="word == null" class="text-3xl font-bold tracking-tight">Serendipity</h1>
+
+
             <p class="text-gray-500 dark:text-gray-400">/ˌserənˈdipədē/</p>
           </div>
           <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 ml-auto shrink-0">
@@ -129,7 +134,7 @@
         <div class="grid gap-4">
           <div class="grid md:grid-cols-2 gap-4">
             <div class="flex flex-col gap-2">
-    <h3 class="font-semibold">Pronunciation <audio controls :src="audioSource"></audio></h3>
+    <h3 class="font-semibold">Pronunciation <audio controls :src="audioUrl"></audio></h3>
   </div>
             <div class="flex flex-col gap-2">
               <h3 class="font-semibold">Source</h3>
@@ -186,14 +191,44 @@
 export default {
   data() {
     return {
-      isDropdownOpen: false,
-      audioSource: "https://api.dictionaryapi.dev/media/pronunciations/en/abhor-us.mp3"
+      isDropdownOpen: false,      
+      searchTerm: '',
+      wordData: null,
+      apiUrl: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
+      word:null,
+      audioUrl:null
     };
   },
   methods: {
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    async searchWord() {
+  try {
+    const response = await fetch(`${this.apiUrl}${this.searchTerm}`);
+    const data = await response.json();
+    if (Array.isArray(data) && data.length > 0) {
+      this.wordData = data[0];
+      this.word = this.wordData.word;
+
+      // Check if phonetics data exists
+      if (this.wordData.phonetics && this.wordData.phonetics.length > 1) {
+        // Access the audio URL for the second pronunciation variation
+        this.audioUrl = this.wordData.phonetics[1].audio;
+      } else {
+        console.error('Second pronunciation variation not found');
+      }
+    } else {
+      console.error('No data or invalid response from the API');
     }
+  } catch (error) {
+    console.error('Error fetching word data:', error);
+  }
+}
+
+
+
+
   }
 };
 </script>
